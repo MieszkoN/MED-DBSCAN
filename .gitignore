@@ -1,0 +1,9 @@
+
+
+/etc/*
+/Include/*
+/share/*
+/Lib/*
+/Scripts/*
+
+pyvenv.cfg
