@@ -4,17 +4,23 @@ import math
 UNCLASSIFIED = False
 NOISE = -1
 
-def calculate_distance(p,q):
-	return math.sqrt(np.power(p-q,2).sum())
+def minkowski3(p,q):
+    return math.pow(np.power(p-q,3).sum(),1/3)
 
-def check_epsilon(p,q,eps):
-	return calculate_distance(p,q) < eps
+def manhattan(p,q):
+    return (np.abs(p-q).sum())
 
-def range_query(db_values, point_q, eps):
+def euclidean(p,q):
+    return math.sqrt(np.power(p-q,2).sum())
+
+def check_epsilon(p,q,eps, dist_func):
+	return dist_func(p,q) < eps
+
+def range_query(db_values, point_q, eps, dist_func):
     n_points = db_values.shape[0]
     neighbours = []
     for i in range(0, n_points):
-        if check_epsilon(db_values[point_q,:], db_values[i,:], eps):
+        if check_epsilon(db_values[point_q,:], db_values[i,:], eps, dist_func):
             neighbours.append(i)
     return neighbours
         
@@ -33,7 +39,17 @@ def mark_core_point(point_id, cluster_id, neighbours, seeds, labels):
     
     return labels, seeds
 
-def dbscan(db_values, eps, min_points):
+def dbscan(db_values, eps, min_points, dist_func: str = 'euclidean'):
+
+    func = euclidean
+
+    if dist_func == 'euclidean':
+        func = euclidean
+    elif dist_func == 'manhattan':
+        func = manhattan
+    elif dist_func == 'minkowski':
+        func = minkowski3
+
     seeds = []
     real_seeds = {}
     cluster_id = 0
@@ -46,7 +62,7 @@ def dbscan(db_values, eps, min_points):
         if labels[point_id] != UNCLASSIFIED:
             continue
         
-        neighbours = range_query(db_values, point_id, eps)
+        neighbours = range_query(db_values, point_id, eps, dist_func=func)
             
         if len(neighbours) < min_points:
             labels[point_id] = NOISE
@@ -63,7 +79,7 @@ def dbscan(db_values, eps, min_points):
             # start with first seed    
             s = seeds[0]
             # check neighbours for each seed
-            s_neighbours = range_query(db_values, s, eps)
+            s_neighbours = range_query(db_values, s, eps, dist_func=func)
             if len(s_neighbours) >= min_points: # check if s is a core point
                 # deal with core point and its neighbours
                 mark_core_point(point_id=s, cluster_id=cluster_id, neighbours=s_neighbours, seeds=seeds, labels=labels)
