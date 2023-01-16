@@ -37,7 +37,7 @@ class KMeans:
         centroid_ids_list = []
         for x in X:
             distance_list = calculate_euclidean_distance(x, self.centroids)
-            centroid_id = np.argmin(distance_list)
+            centroid_id = np.argmin(list(distance_list))
             centroids.append(self.centroids[centroid_id])
             centroid_ids_list.append(centroid_id)
-        return centroids, centroid_ids_list
+        return np.array(centroids), np.array(centroid_ids_list)
